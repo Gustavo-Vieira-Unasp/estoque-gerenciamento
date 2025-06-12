@@ -19,6 +19,8 @@ typedef struct {
     Categoria categoria;
 } Produto;
 
-void imprimirProduto(Produto produto);
+void inicializarProduto(Produto *p);
+void imprimirProduto(const Produto produto);
+Produto cadastrarProduto();
 
 #endif

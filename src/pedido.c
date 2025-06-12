@@ -38,7 +38,7 @@ int adicionarItemAoPedido(Pedido *p, const char *codigo_produto, int quantidade)
     for (int i = 0; i < p->num_itens_diferentes; i++) {
         if (strcmp(p->itens[i].codigo_produto, codigo_produto) == 0) {
             // Se o item já existe, apenas atualiza a quantidade
-            p->itens[i].quantidade_solicitada += quantity;
+            p->itens[i].quantidade_solicitada += quantidade; // Use 'quantidade' aqui, não 'quantity'
             return 1;
         }
     }
@@ -61,14 +61,14 @@ void imprimirPedido(const Pedido *p) { // Mudado para receber ponteiro
     printf("ID do Pedido: %d\n", p->id_pedido);
     printf("Solicitante: %s\n", p->nomeSolicitante);
     printf("Data da Solicitação: ");
-    imprimirData(&(p->dataSolicitacao)); // Passar por ponteiro para imprimirData
+    imprimirData(p->dataSolicitacao); // <<< CORRIGIDO: Passa Data por valor
     printf("\nItens do Pedido (%d tipos diferentes):\n", p->num_itens_diferentes);
     if (p->num_itens_diferentes == 0) {
         printf("  Nenhum item neste pedido.\n");
     } else {
         for (int i = 0; i < p->num_itens_diferentes; i++) {
             printf("  - ");
-            imprimirItemPedido(&(p->itens[i])); // Passar por ponteiro para imprimirItemPedido
+            imprimirItemPedido(&(p->itens[i])); // Se imprimirItemPedido espera ponteiro, mantenha assim
         }
     }
 }

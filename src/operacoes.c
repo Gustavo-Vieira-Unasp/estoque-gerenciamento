@@ -5,7 +5,7 @@
 #include "engradado.h"
 #include "pedido.h"
 #include "itempedido.h"
-#include "data.h"
+#include "data.h" // Incluído
 #include "categoria.h"
 
 #include <stdio.h>
@@ -55,7 +55,6 @@ Engradado criarEngradadoTeste(Produto p, int qtd) {
     adicionarItensEngradado(&e, p, qtd); // Usa a função do Engradado para adicionar
     return e;
 }
-
 
 // 1. Inserir Produtos no Estoque
 void realizarInsercaoProduto(Estoque *estoque) {
@@ -199,7 +198,7 @@ void processarProximoPedido(Fila *filaPedidos, Estoque *estoque) {
     // Para cada item no pedido, tentar encontrar e remover do estoque
     for (int i = 0; i < pedidoAProcessar.num_itens_diferentes; i++) {
         ItemPedido item = pedidoAProcessar.itens[i];
-        printf("\n  - Tentando atender item: Produto (Cód): %s, Quantidade: %d\n", item.codigo_produto, item.quantidade_solicitada);
+        printf("\n   - Tentando atender item: Produto (Cód): %s, Quantidade: %d\n", item.codigo_produto, item.quantidade_solicitada);
 
         int quantidade_atendida = 0;
         int quantidade_restante_no_item = item.quantidade_solicitada;
@@ -212,27 +211,27 @@ void processarProximoPedido(Fila *filaPedidos, Estoque *estoque) {
                     Engradado *engradadoNaPilha = &(currentPilha->itens[k]);
 
                     if (strcmp(engradadoNaPilha->produto.codigo, item.codigo_produto) == 0) {
-                        printf("    Produto '%s' encontrado em [%d][%d], engradado na posição %d da pilha. Qtd: %d\n",
+                        printf("     Produto '%s' encontrado em [%d][%d], engradado na posição %d da pilha. Qtd: %d\n",
                                item.codigo_produto, l, c, k + 1, engradadoNaPilha->quantidadeAtual);
 
                         int pode_remover = (engradadoNaPilha->quantidadeAtual >= quantidade_restante_no_item) ?
-                                          quantidade_restante_no_item : engradadoNaPilha->quantidadeAtual;
+                                           quantidade_restante_no_item : engradadoNaPilha->quantidadeAtual;
 
                         if (removerItensEngradado(engradadoNaPilha, pode_remover)) { // Tenta remover do engradado
                             quantidade_atendida += pode_remover;
                             quantidade_restante_no_item -= pode_remover;
-                            printf("      Atendidos %d unidades. Restam %d para o item.\n", pode_remover, quantidade_restante_no_item);
+                            printf("       Atendidos %d unidades. Restam %d para o item.\n", pode_remover, quantidade_restante_no_item);
 
                             if (engradadoNaPilha->quantidadeAtual == 0 && k == currentPilha->topo) {
-                                printf("      Engradado na posição %d da pilha ficou vazio, removendo-o da pilha.\n", k + 1);
+                                printf("       Engradado na posição %d da pilha ficou vazio, removendo-o da pilha.\n", k + 1);
                                 pop(currentPilha);
                             } else if (engradadoNaPilha->quantidadeAtual == 0) {
-                                printf("      Engradado na posição %d da pilha ficou vazio, mas não é o topo, permanecerá na pilha por agora.\n", k + 1);
+                                printf("       Engradado na posição %d da pilha ficou vazio, mas não é o topo, permanecerá na pilha por agora.\n", k + 1);
                             }
                         }
 
                         if (quantidade_restante_no_item == 0) {
-                            printf("    Item de pedido para produto '%s' completamente atendido.\n", item.codigo_produto);
+                            printf("     Item de pedido para produto '%s' completamente atendido.\n", item.codigo_produto);
                             break; // Item atendido, passa para o próximo ItemPedido
                         }
                     }
@@ -243,10 +242,10 @@ void processarProximoPedido(Fila *filaPedidos, Estoque *estoque) {
         }
 
         if (quantidade_restante_no_item > 0) {
-            printf("  AVISO: Não foi possível atender completamente o item '%s'. Faltaram %d unidades.\n",
+            printf("   AVISO: Não foi possível atender completamente o item '%s'. Faltaram %d unidades.\n",
                    item.codigo_produto, quantidade_restante_no_item);
         } else {
-            printf("  Item de pedido para produto '%s' atendido com sucesso.\n", item.codigo_produto);
+            printf("   Item de pedido para produto '%s' atendido com sucesso.\n", item.codigo_produto);
         }
     }
     printf("\n--- Pedido ID %d Processado. ---\n", pedidoAProcessar.id_pedido);
@@ -288,8 +287,8 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
                         for (int k = currentPilha->topo; k >= 0; k--) {
                             Engradado engr = currentPilha->itens[k];
                             if (compararDatas(engr.produto.dataValidade, dataAtual) < 0) { // Se dataValidade < dataAtual
-                                printf("  VENCIDO: [%d][%d] - %s (Lote: %s), Validade: ", i, j, engr.produto.nome, engr.produto.lote);
-                                imprimirData(engr.produto.dataValidade);
+                                printf("   VENCIDO: [%d][%d] - %s (Lote: %s), Validade: ", i, j, engr.produto.nome, engr.produto.lote);
+                                imprimirData(engr.produto.dataValidade); // <<< CORRIGIDO: Passa Data por valor
                                 printf("\n");
                                 vencidos_encontrados = 1;
                             }
@@ -297,8 +296,7 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
                     }
                 }
             }
-            if (!vencidos_encontrados) printf("  Nenhum produto vencido encontrado.\n");
-
+            if (!vencidos_encontrados) printf("   Nenhum produto vencido encontrado.\n");
 
             printf("\nProdutos Próximos do Vencimento (Próximos 60 dias da Data Atual: %02d/%02d/%04d):\n", dataAtual.dia, dataAtual.mes, dataAtual.ano);
 
@@ -319,9 +317,9 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
                             Engradado engr = currentPilha->itens[k];
                             // Se não está vencido E a validade é antes da data futura (ou igual)
                             if (compararDatas(engr.produto.dataValidade, dataAtual) >= 0 &&
-                                compararDatas(engr.produto.dataValidade, dataFutura) <= 0) {
-                                printf("  PRÓXIMO: [%d][%d] - %s (Lote: %s), Validade: ", i, j, engr.produto.nome, engr.produto.lote);
-                                imprimirData(engr.produto.dataValidade);
+                                 compararDatas(engr.produto.dataValidade, dataFutura) <= 0) {
+                                printf("   PRÓXIMO: [%d][%d] - %s (Lote: %s), Validade: ", i, j, engr.produto.nome, engr.produto.lote);
+                                imprimirData(engr.produto.dataValidade); // <<< CORRIGIDO: Passa Data por valor
                                 printf("\n");
                                 proximos_vencimento_encontrados = 1;
                             }
@@ -329,7 +327,7 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
                     }
                 }
             }
-            if (!proximos_vencimento_encontrados) printf("  Nenhum produto próximo do vencimento encontrado (nos próximos 60 dias aproximadamente).\n");
+            if (!proximos_vencimento_encontrados) printf("   Nenhum produto próximo do vencimento encontrado (nos próximos 60 dias aproximadamente).\n");
 
             printf("------------------------------\n");
             break;
@@ -341,10 +339,10 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
             for (int i = 0; i < LINHAS_ESTOQUE; i++) {
                 for (int j = 0; j < COLUNAS_ESTOQUE; j++) {
                     if (estaVaziaPilha(&(estoque->pilhas[i][j]))) {
-                        printf("  [%d][%d]: Vazia\n", i, j);
+                        printf("   [%d][%d]: Vazia\n", i, j);
                         vazias++;
                     } else {
-                        printf("  [%d][%d]: Ocupada (Engradados: %d/%d)\n", i, j,
+                        printf("   [%d][%d]: Ocupada (Engradados: %d/%d)\n", i, j,
                                estoque->pilhas[i][j].topo + 1, MAX_ENGRADADOS_POR_PILHA);
                         ocupadas++;
                     }
