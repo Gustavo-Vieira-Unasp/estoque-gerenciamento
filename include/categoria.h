@@ -1,0 +1,17 @@
+#ifndef CATEGORIA_H
+#define CATEGORIA_H
+
+typedef enum {
+    CATEGORIA_INVALIDA = 0,
+    CATEGORIA_ALIMENTOS,
+    CATEGORIA_BEBIDAS,
+    CATEGORIA_ELETRONICOS,
+    CATEGORIA_LIMPEZA,
+    CATEGORIA_CONSTRUCAO,
+    CATEGORIA_MEDICAMENTOS,
+    NUM_CATEGORIAS
+} Categoria;
+
+const char* getNomeCategoria(Categoria categoria);
+
+#endif
