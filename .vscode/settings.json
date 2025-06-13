@@ -1,0 +1,13 @@
+{
+    "C_Cpp.default.compilerPath": "C:/MinGW/bin/gcc.exe",
+    "files.associations": {
+        "*.dbclient-js": "javascript",
+        "*.wmls": "javascriptlite",
+        "*.css": "css",
+        "*.js": "javascript",
+        "*.drawio": "drawio",
+        "*.mmd": "mermaid",
+        "stdio.h": "c",
+        "estoque.h": "c"
+    }
+}
