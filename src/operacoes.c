@@ -1,11 +1,11 @@
 #include "operacoes.h"
 #include "estoque.h"
 #include "filaPedidos.h"
-#include "produto.h"
+#include "produto.h"    // Incluir produto.h para usar cadastrarProduto e Produto
 #include "engradado.h"
 #include "pedido.h"
 #include "itempedido.h"
-#include "data.h" // Incluído
+#include "data.h"
 #include "categoria.h"
 
 #include <stdio.h>
@@ -17,6 +17,7 @@
 static int proximo_id_pedido_global = 1;
 
 // --- Funções Auxiliares para Entrada de Dados ---
+// (Estas funções são usadas em operacoes.c e produto.c, o ideal seria movê-las para um utilidades.h/c)
 Data lerDataDoUsuario() {
     Data d;
     printf("Digite o dia (DD): ");
@@ -56,7 +57,8 @@ Engradado criarEngradadoTeste(Produto p, int qtd) {
     return e;
 }
 
-// 1. Inserir Produtos no Estoque
+
+// 1. Inserir Produtos no Estoque (Melhorado para usar cadastrarProduto)
 void realizarInsercaoProduto(Estoque *estoque) {
     printf("\n--- INSERIR ENGRADADO NO ESTOQUE ---\n");
     int linha, coluna;
@@ -66,40 +68,39 @@ void realizarInsercaoProduto(Estoque *estoque) {
     scanf("%d", &coluna);
     while (getchar() != '\n'); // Limpa o buffer
 
+    if (linha < 0 || linha >= LINHAS_ESTOQUE || coluna < 0 || coluna >= COLUNAS_ESTOQUE) {
+        printf("Erro: Posição de estoque inválida [%d][%d].\n", linha, coluna);
+        return;
+    }
+
     if (estaCheiaPilha(&(estoque->pilhas[linha][coluna]))) {
         printf("Erro: A pilha na posição [%d][%d] está cheia. Não é possível inserir mais engradados.\n", linha, coluna);
         return;
     }
 
-    // Perguntar ao usuário os detalhes do produto para o novo engradado
-    Produto novoProduto;
-    printf("\n--- Dados do PRODUTO para o Engradado ---\n");
-    printf("Código do Produto: "); lerStringComEspacos(novoProduto.codigo, MAX_CODIGO_PRODUTO);
-    printf("Lote do Produto: "); lerStringComEspacos(novoProduto.lote, MAX_LOTE);
-    printf("Nome do Produto: "); lerStringComEspacos(novoProduto.nome, MAX_NOME_PRODUTO);
-    printf("Preço de Compra: "); scanf("%f", &novoProduto.precoCompra);
-    printf("Preço de Venda: "); scanf("%f", &novoProduto.precoVenda);
+    // --- Nova lógica para obter o produto ---
+    Produto produtoParaEngradado;
+    int opcao_produto;
+
+    printf("\n--- Obtenção do PRODUTO para o Engradado ---\n");
+    printf("1. Cadastrar um NOVO Produto\n");
+    printf("2. (Funcionalidade futura: Usar produto existente - Não implementado ainda)\n"); // Se você tiver uma lista de produtos cadastrados
+    printf("Escolha uma opção: ");
+    scanf("%d", &opcao_produto);
     while (getchar() != '\n'); // Limpa o buffer
 
-    printf("--- Data de Fabricação ---\n");
-    novoProduto.dataFabricacao = lerDataDoUsuario();
-    printf("--- Data de Validade ---\n");
-    novoProduto.dataValidade = lerDataDoUsuario();
-
-    printf("Escolha a Categoria:\n");
-    for (int i = 1; i < NUM_CATEGORIAS; i++) { // Começa de 1 para pular CATEGORIA_INVALIDA
-        printf("%d. %s\n", i, getNomeCategoria((Categoria)i));
+    switch (opcao_produto) {
+        case 1:
+            produtoParaEngradado = cadastrarProduto(); // Chama a função que já pede os dados
+            break;
+        case 2:
+            printf("Funcionalidade de usar produto existente não implementada. Por favor, cadastre um novo.\n");
+            return; // Sai da função por enquanto
+        default:
+            printf("Opção inválida. Operação cancelada.\n");
+            return;
     }
-    int cat_escolhida;
-    printf("Opção: ");
-    scanf("%d", &cat_escolhida);
-    while (getchar() != '\n'); // Limpa o buffer
-    if (cat_escolhida > 0 && cat_escolhida < NUM_CATEGORIAS) {
-        novoProduto.categoria = (Categoria)cat_escolhida;
-    } else {
-        printf("Categoria inválida, definindo como 'Inválida'.\n");
-        novoProduto.categoria = CATEGORIA_INVALIDA;
-    }
+    // --- Fim da nova lógica ---
 
     int quantidade_unidades;
     printf("Quantidade de UNIDADES deste produto no engradado (máx %d): ", MAX_UNIDADES_POR_ENGRADADO);
@@ -109,13 +110,15 @@ void realizarInsercaoProduto(Estoque *estoque) {
     // Criar o engradado e tentar adicionar o produto
     Engradado novoEngradado;
     inicializarEngradado(&novoEngradado);
-    if (!adicionarItensEngradado(&novoEngradado, novoProduto, quantidade_unidades)) {
+    if (!adicionarItensEngradado(&novoEngradado, produtoParaEngradado, quantidade_unidades)) {
         printf("Falha ao criar o engradado. Verifique a quantidade ou se o produto já existe no engradado (mesmo que vazio, se o código for diferente).\n");
         return;
     }
 
     // Inserir o engradado na pilha do estoque
     inserirEngradadoNoEstoque(estoque, linha, coluna, novoEngradado);
+    printf("Engradado com '%s' (Qtd: %d) inserido na posição [%d][%d] do estoque.\n",
+           produtoParaEngradado.nome, quantidade_unidades, linha, coluna);
 }
 
 // 2. Remover Produtos do Estoque
@@ -275,11 +278,8 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
             dataAtual.mes = tm_info->tm_mon + 1;
             dataAtual.ano = tm_info->tm_year + 1900;
 
-            printf("\n--- RELATÓRIO DE VALIDADE ---\n");
-            int vencidos_encontrados = 0;
-            int proximos_vencimento_encontrados = 0;
-
             printf("\nProdutos Vencidos (Data Atual: %02d/%02d/%04d):\n", dataAtual.dia, dataAtual.mes, dataAtual.ano);
+            int vencidos_encontrados = 0;
             for (int i = 0; i < LINHAS_ESTOQUE; i++) {
                 for (int j = 0; j < COLUNAS_ESTOQUE; j++) {
                     Pilha *currentPilha = &(estoque->pilhas[i][j]);
@@ -288,7 +288,7 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
                             Engradado engr = currentPilha->itens[k];
                             if (compararDatas(engr.produto.dataValidade, dataAtual) < 0) { // Se dataValidade < dataAtual
                                 printf("   VENCIDO: [%d][%d] - %s (Lote: %s), Validade: ", i, j, engr.produto.nome, engr.produto.lote);
-                                imprimirData(engr.produto.dataValidade); // <<< CORRIGIDO: Passa Data por valor
+                                imprimirData(engr.produto.dataValidade);
                                 printf("\n");
                                 vencidos_encontrados = 1;
                             }
@@ -298,17 +298,18 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
             }
             if (!vencidos_encontrados) printf("   Nenhum produto vencido encontrado.\n");
 
-            printf("\nProdutos Próximos do Vencimento (Próximos 60 dias da Data Atual: %02d/%02d/%04d):\n", dataAtual.dia, dataAtual.mes, dataAtual.ano);
 
-            Data dataFutura;
-            dataFutura.dia = dataAtual.dia;
-            dataFutura.mes = dataAtual.mes + 2;
-            dataFutura.ano = dataAtual.ano;
+            printf("\nProdutos Próximos do Vencimento (Próximos 60 dias da Data Atual: %02d/%02d/%04d):\n", dataAtual.dia, dataAtual.mes, dataAtual.ano);
+            int proximos_vencimento_encontrados = 0;
+            Data dataFutura = dataAtual; // Começa com a data atual
+            // Adiciona 60 dias (aproximadamente 2 meses)
+            dataFutura.mes += 2;
             if (dataFutura.mes > 12) {
                 dataFutura.mes -= 12;
                 dataFutura.ano++;
             }
-
+            // Não lidamos com estouro de dias para simplificar, mas idealmente seria uma função mais robusta de adição de dias
+            
             for (int i = 0; i < LINHAS_ESTOQUE; i++) {
                 for (int j = 0; j < COLUNAS_ESTOQUE; j++) {
                     Pilha *currentPilha = &(estoque->pilhas[i][j]);
@@ -319,7 +320,7 @@ void exibirRelatorios(Estoque *estoque, Fila *filaPedidos) {
                             if (compararDatas(engr.produto.dataValidade, dataAtual) >= 0 &&
                                  compararDatas(engr.produto.dataValidade, dataFutura) <= 0) {
                                 printf("   PRÓXIMO: [%d][%d] - %s (Lote: %s), Validade: ", i, j, engr.produto.nome, engr.produto.lote);
-                                imprimirData(engr.produto.dataValidade); // <<< CORRIGIDO: Passa Data por valor
+                                imprimirData(engr.produto.dataValidade);
                                 printf("\n");
                                 proximos_vencimento_encontrados = 1;
                             }

@@ -5,69 +5,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void exibirMenu() {
-    printf("\n--- SISTEMA DE GERENCIAMENTO DE ESTOQUE ---\n");
-    printf("1. Inserir Engradado no Estoque\n");
-    printf("2. Remover Engradado do Estoque\n");
-    printf("3. Criar e Adicionar Novo Pedido\n");
-    printf("4. Processar Próximo Pedido\n");
-    printf("5. Visualizar Estoque Completo\n");
-    printf("6. Buscar Produto no Estoque\n");
-    printf("7. Exibir Relatórios\n");
-    printf("0. Sair\n");
-    printf("-------------------------------------------\n");
-    printf("Escolha uma opção: ");
-}
 
-int main() {
-    Estoque meuEstoque;
-    Fila filaDePedidos;
-
-    inicializarEstoque(&meuEstoque);
-    inicializarFila(&filaDePedidos);
-
+void menuPrincipal(Estoque *estoque, Fila *filaPedidos, Pilha *pilhaEngradados) {
     int opcao;
+    Produto p_temp;
+
     do {
-        exibirMenu();
+        printf("\n--- MENU PRINCIPAL ---\n");
+        printf("1. Inserir Engradado no Estoque\n");
+        printf("2. Remover Engradado do Estoque\n");
+        printf("3. Criar e Adicionar Pedido\n");
+        printf("4. Processar Próximo Pedido\n");
+        printf("5. Exibir Relatórios\n");
+        printf("6. Cadastrar Novo Produto\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opção: ");
         scanf("%d", &opcao);
         while (getchar() != '\n');
 
         switch (opcao) {
             case 1:
-                realizarInsercaoProduto(&meuEstoque);
+                realizarInsercaoProduto(estoque);
                 break;
             case 2:
-                realizarRemocaoEngradado(&meuEstoque);
+                realizarRemocaoEngradado(estoque);
                 break;
             case 3:
-                criarEAdicionarPedido(&filaDePedidos);
+                criarEAdicionarPedido(filaPedidos);
                 break;
             case 4:
-                processarProximoPedido(&filaDePedidos, &meuEstoque);
+                processarProximoPedido(filaPedidos, estoque);
                 break;
             case 5:
-                visualizarEstoque(&meuEstoque);
+                exibirRelatorios(estoque, filaPedidos);
                 break;
-            case 6: {
-                char codigo_busca[MAX_CODIGO_PRODUTO];
-                printf("Digite o código do produto para buscar: ");
-                lerStringComEspacos(codigo_busca, MAX_CODIGO_PRODUTO);
-                buscarProdutoNoEstoque(&meuEstoque, codigo_busca);
-                break;
-            }
-            case 7:
-                exibirRelatorios(&meuEstoque, &filaDePedidos);
+            case 6:
+                p_temp = cadastrarProduto();
+                printf("Produto '%s' cadastrado. Você pode usá-lo para criar engradados agora.\n", p_temp.nome);
+                imprimirProduto(p_temp);
                 break;
             case 0:
-                printf("Saindo do sistema. Até mais!\n");
+                printf("Saindo do programa.\n");
                 break;
             default:
                 printf("Opção inválida. Tente novamente.\n");
                 break;
         }
-        printf("\nPressione ENTER para continuar...");
-        while (getchar() != '\n');
     } while (opcao != 0);
-
-    return 0;
 }

@@ -56,7 +56,7 @@ void imprimirPilha(Pilha *p) {
     } else {
         for (int i = p->topo; i >= 0; i--) {
             printf("Posição %d: \n", i);
-            imprimirEngradado(p->itens[i]); 
+            imprimirEngradado(p ->itens[i]); 
             printf("---\n");
         }
     }
